@@ -1,0 +1,11 @@
+/cmake-build-*/
+/out/
+.vs
+/**/node_modules/
+/.idea/
+*.node
+*.dll
+*.pdb
+/**/dist/
+/build
+/**/prebuilt/*

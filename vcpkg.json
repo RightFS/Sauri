@@ -1,0 +1,36 @@
+{
+  "name" : "nngame",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "21816e0df975ab3ba13ab75263c4deeb080ef681",
+  "vcpkg-configuration" : {
+    "overlay-ports" : [ "./vcpkg_ports/wcdb", "./vcpkg_ports/sqlcipher" ]
+  },
+  "dependencies" : [ {
+    "name" : "rpclib",
+    "version>=" : "2.3.0#2"
+  }, {
+    "name" : "openssl",
+    "version>=" : "3.3.2#1"
+  }, {
+    "name" : "gtest",
+    "version>=" : "1.15.2"
+  }, {
+    "name" : "curl",
+    "version>=" : "8.12.1"
+  }, {
+    "name" : "libarchive",
+    "version>=" : "3.7.2"
+  }, {
+    "name" : "nlohmann-json",
+    "version>=" : "3.11.3"
+  }, {
+    "name" : "wcdb",
+    "version>=" : "2.1.10"
+  }, {
+    "name" : "zstd",
+    "version>=" : "1.5.6"
+  }, {
+    "name" : "easyloggingpp",
+    "version>=" : "9.97.1#1"
+  } ]
+}

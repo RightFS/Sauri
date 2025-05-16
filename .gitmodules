@@ -1,0 +1,15 @@
+[submodule "3rdpart/installer"]
+	path = 3rdpart/installer
+	url = http://10.1.1.25:3000/nn-game/nng_installer.git
+	branch = main
+[submodule "3rdpart/systemkit"]
+	path = 3rdpart/systemkit
+	url = http://10.1.1.25:3000/nn-game/nng_systemkit.git
+	branch = main
+[submodule "3rdpart/scriptengine"]
+	path = 3rdpart/scriptengine
+	url = http://10.1.1.25:3000/nn-game/nng_scriptengine.git
+	branch = main
+[submodule "3rdpart/common"]
+	path = 3rdpart/common
+	url = http://10.1.1.25:3000/nn-game/nng_common.git

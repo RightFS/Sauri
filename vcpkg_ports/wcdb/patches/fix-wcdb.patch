@@ -1,0 +1,864 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+new file mode 100644
+index 000000000..cf4d03559
+--- /dev/null
++++ b/CMakeLists.txt
+@@ -0,0 +1,3 @@
++cmake_minimum_required(VERSION 3.16)
++project(wcdb)
++add_subdirectory(src)
+\ No newline at end of file
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 15021f016..583ba3dc4 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -1,12 +1,15 @@
+ cmake_minimum_required(VERSION 3.13)
+-project(WCDB)
++project(WCDB VERSION 2.1.8)
+ 
+ include(utility.cmake)
+-include(../sqlcipher/sqlcipher.cmake)
++find_package(OpenSSL REQUIRED)
++find_package(ZLIB REQUIRED)
++find_package(sqlcipher REQUIRED)
+ 
+ if (NOT DEFINED WCDB_ZSTD)
+     set(WCDB_ZSTD ON CACHE BOOL "Build WCDB with zstd" FORCE)
+ endif ()
++option(BUILD_SHARED_LIBS "Build shared libraries" ON)
+ 
+ set(WCONAN_CMAKE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../WeChat/wconan.cmake)
+ if (NOT SKIP_WCONAN AND EXISTS ${WCONAN_CMAKE_PATH})
+@@ -23,236 +26,223 @@ endif ()
+ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+ set(CMAKE_C_VISIBILITY_PRESET hidden)
+ 
+-# Add debug info
+-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
+-
+ set(WCDB_SRC_DIR ${CMAKE_CURRENT_LIST_DIR})
+ 
+ file(GLOB_RECURSE WCDB_COMMON_SRC
+-    ${WCDB_SRC_DIR}/common/*.c
+-    ${WCDB_SRC_DIR}/common/*.cpp
+-    ${WCDB_SRC_DIR}/common/*.h
+-    ${WCDB_SRC_DIR}/common/*.hpp
++        ${WCDB_SRC_DIR}/common/*.c
++        ${WCDB_SRC_DIR}/common/*.cpp
+ )
+ recursive_subdirs(WCDB_COMMON_INCLUDES ${WCDB_SRC_DIR}/common)
+-
+ file(GLOB_RECURSE WCDB_CPP_SRC
+-    ${WCDB_SRC_DIR}/cpp/*.c
+-    ${WCDB_SRC_DIR}/cpp/*.cpp
+-    ${WCDB_SRC_DIR}/cpp/*.h
+-    ${WCDB_SRC_DIR}/cpp/*.hpp
++        ${WCDB_SRC_DIR}/cpp/*.c
++        ${WCDB_SRC_DIR}/cpp/*.cpp
+ )
+ list(FILTER WCDB_CPP_SRC EXCLUDE REGEX "(.*/tests/.*)")
+ recursive_subdirs(WCDB_CPP_INCLUDES ${WCDB_SRC_DIR}/cpp)
+ 
+ file(GLOB_RECURSE WCDB_BRIDGE_SRC
+-    ${WCDB_SRC_DIR}/bridge/base/*.[ch]
+-    ${WCDB_SRC_DIR}/bridge/base/*.[ch]pp
+-    ${WCDB_SRC_DIR}/bridge/cppbridge/*.[ch]
+-    ${WCDB_SRC_DIR}/bridge/cppbridge/*.[ch]pp
+-    ${WCDB_SRC_DIR}/bridge/winqbridge/*.[ch]
+-    ${WCDB_SRC_DIR}/bridge/winqbridge/*.[ch]pp
++        ${WCDB_SRC_DIR}/bridge/base/*.[ch]
++        ${WCDB_SRC_DIR}/bridge/base/*.[ch]pp
++        ${WCDB_SRC_DIR}/bridge/cppbridge/*.[ch]
++        ${WCDB_SRC_DIR}/bridge/cppbridge/*.[ch]pp
++        ${WCDB_SRC_DIR}/bridge/winqbridge/*.[ch]
++        ${WCDB_SRC_DIR}/bridge/winqbridge/*.[ch]pp
+ )
+ recursive_subdirs(WCDB_BRIDGE_INCLUDES ${WCDB_SRC_DIR}/bridge)
+ 
+ # Copy all headers to include folder
+ file(GLOB_RECURSE WCDB_PUBLIC_HEADERS
+-    ${WCDB_SRC_DIR}/common/*/AggregateFunction.hpp
+-    ${WCDB_SRC_DIR}/common/*/AuxiliaryFunctionModule.hpp
+-    ${WCDB_SRC_DIR}/common/*/BaseBinding.hpp
+-    ${WCDB_SRC_DIR}/common/*/BaseTokenizerUtil.hpp
+-    ${WCDB_SRC_DIR}/common/*/BindParameter.hpp
+-    ${WCDB_SRC_DIR}/common/*/CaseInsensitiveList.hpp
+-    ${WCDB_SRC_DIR}/common/*/Column.hpp
+-    ${WCDB_SRC_DIR}/common/*/ColumnConstraint.hpp
+-    ${WCDB_SRC_DIR}/common/*/ColumnDef.hpp
+-    ${WCDB_SRC_DIR}/common/*/ColumnType.hpp
+-    ${WCDB_SRC_DIR}/common/*/CommonTableExpression.hpp
+-    ${WCDB_SRC_DIR}/common/*/Convertible.hpp
+-    ${WCDB_SRC_DIR}/common/*/ConvertibleImplementation.hpp
+-    ${WCDB_SRC_DIR}/common/*/CoreFunction.hpp
+-    ${WCDB_SRC_DIR}/common/*/Data.hpp
+-    ${WCDB_SRC_DIR}/common/*/WCDBError.hpp
+-    ${WCDB_SRC_DIR}/common/*/Expression.hpp
+-    ${WCDB_SRC_DIR}/common/*/ExpressionOperable.hpp
+-    ${WCDB_SRC_DIR}/common/*/Filter.hpp
+-    ${WCDB_SRC_DIR}/common/*/ForeignKey.hpp
+-    ${WCDB_SRC_DIR}/common/*/FrameSpec.hpp
+-    ${WCDB_SRC_DIR}/common/*/FTSFunction.hpp
+-    ${WCDB_SRC_DIR}/common/*/FTS5AuxiliaryFunctionTemplate.hpp
+-    ${WCDB_SRC_DIR}/common/*/FTSConst.h
+-    ${WCDB_SRC_DIR}/common/*/FTSError.hpp
+-    ${WCDB_SRC_DIR}/common/*/IndexedColumn.hpp
+-    ${WCDB_SRC_DIR}/common/*/Join.hpp
+-    ${WCDB_SRC_DIR}/common/*/JoinConstraint.hpp
+-    ${WCDB_SRC_DIR}/common/*/LiteralValue.hpp
+-    ${WCDB_SRC_DIR}/common/*/Macro.h
+-    ${WCDB_SRC_DIR}/common/*/MemberPointer.hpp
+-    ${WCDB_SRC_DIR}/common/*/OneOrBinaryTokenizer.hpp
+-    ${WCDB_SRC_DIR}/common/*/OrderingTerm.hpp
+-    ${WCDB_SRC_DIR}/common/*/Pragma.hpp
+-    ${WCDB_SRC_DIR}/common/*/QualifiedTable.hpp
+-    ${WCDB_SRC_DIR}/common/*/RaiseFunction.hpp
+-    ${WCDB_SRC_DIR}/common/*/Recyclable.hpp
+-    ${WCDB_SRC_DIR}/common/*/RecyclableHandle.hpp
+-    ${WCDB_SRC_DIR}/common/*/ResultColumn.hpp
+-    ${WCDB_SRC_DIR}/common/*/ScalarFunctionModule.hpp
+-    ${WCDB_SRC_DIR}/common/*/Schema.hpp
+-    ${WCDB_SRC_DIR}/common/*/Shadow.hpp
+-    ${WCDB_SRC_DIR}/common/*/SharedThreadedErrorProne.hpp
+-    ${WCDB_SRC_DIR}/common/*/SQL.hpp
+-    ${WCDB_SRC_DIR}/common/*/Statement.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementAlterTable.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementAnalyze.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementAttach.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementBegin.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementCommit.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementCreateIndex.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementCreateTable.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementCreateTrigger.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementCreateView.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementCreateVirtualTable.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementDelete.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementDetach.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementDropIndex.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementDropTable.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementDropTrigger.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementDropView.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementExplain.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementInsert.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementPragma.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementReindex.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementRelease.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementRollback.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementSavepoint.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementSelect.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementUpdate.hpp
+-    ${WCDB_SRC_DIR}/common/*/StatementVacuum.hpp
+-    ${WCDB_SRC_DIR}/common/*/StringView.hpp
+-    ${WCDB_SRC_DIR}/common/*/SubstringMatchInfo.hpp
+-    ${WCDB_SRC_DIR}/common/*/Syntax.h
+-    ${WCDB_SRC_DIR}/common/*/SyntaxAlterTableSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxAnalyzeSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxAttachSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxBeginSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxBindParameter.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxColumn.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxColumnConstraint.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxColumnDef.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxCommitSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxCommonConst.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxCommonTableExpression.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxCreateIndexSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxCreateTableSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxCreateTriggerSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxCreateViewSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxCreateVirtualTableSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxDeleteSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxDetachSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxDropIndexSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxDropTableSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxDropTriggerSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxDropViewSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxExplainSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxExpression.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxFilter.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxForeignKeyClause.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxForwardDeclaration.h
+-    ${WCDB_SRC_DIR}/common/*/SyntaxFrameSpec.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxIdentifier.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxIndexedColumn.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxInsertSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxJoinClause.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxJoinConstraint.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxList.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxLiteralValue.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxOrderingTerm.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxPragma.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxPragmaSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxQualifiedTableName.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxRaiseFunction.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxReindexSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxReleaseSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxResultColumn.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxRollbackSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxSavepointSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxSchema.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxSelectCore.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxSelectSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxTableConstraint.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxTableOrSubquery.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxUpdateSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxUpsertClause.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxVacuumSTMT.hpp
+-    ${WCDB_SRC_DIR}/common/*/SyntaxWindowDef.hpp
+-    ${WCDB_SRC_DIR}/common/*/TableConstraint.hpp
+-    ${WCDB_SRC_DIR}/common/*/TableOrSubquery.hpp
+-    ${WCDB_SRC_DIR}/common/*/Tag.hpp
+-    ${WCDB_SRC_DIR}/common/*/TokenizerModule.hpp
+-    ${WCDB_SRC_DIR}/common/*/TokenizerModuleTemplate.hpp
+-    ${WCDB_SRC_DIR}/common/*/SysTypes.h
+-    ${WCDB_SRC_DIR}/common/*/UnsafeData.hpp
+-    ${WCDB_SRC_DIR}/common/*/Upsert.hpp
+-    ${WCDB_SRC_DIR}/common/*/Value.hpp
+-    ${WCDB_SRC_DIR}/common/*/ValueArray.hpp
+-    ${WCDB_SRC_DIR}/common/*/WindowDef.hpp
+-    ${WCDB_SRC_DIR}/common/*/WINQ.h
+-    ${WCDB_SRC_DIR}/common/*/WCDBOptional.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/Accessor.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/BaseOperation.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/Binding.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/Builtin.h
+-    ${WCDB_SRC_DIR}/cpp/*/ChainCall.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/CPPBindingMacro.h
+-    ${WCDB_SRC_DIR}/cpp/*/CPPColumnConstraintMacro.h
+-    ${WCDB_SRC_DIR}/cpp/*/CPPDeclaration.h
+-    ${WCDB_SRC_DIR}/cpp/*/CPPFieldMacro.h
+-    ${WCDB_SRC_DIR}/cpp/*/CPPIndexMacro.h
+-    ${WCDB_SRC_DIR}/cpp/*/CppInterface.h
+-    ${WCDB_SRC_DIR}/cpp/*/CPPORM.h
+-    ${WCDB_SRC_DIR}/cpp/*/CPPORMMacro.h
+-    ${WCDB_SRC_DIR}/cpp/*/CPPTableConstraintMacro.h
+-    ${WCDB_SRC_DIR}/cpp/*/CPPVirtualTableMacro.h
+-    ${WCDB_SRC_DIR}/cpp/*/Database.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/Delete.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/Field.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/FTSTokenizerUtil.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/Handle.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/HandleOperation.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/HandleORMOperation.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/Insert.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/Master.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/MultiObject.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/MultiSelect.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/PreparedStatement.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/ResultField.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/RunTimeAccessor.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/STDOptionalAccessor.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/WCDBOptionalAccessor.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/SharedPtrAccessor.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/Select.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/Sequence.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/StatementOperation.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/Table.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/TableOperation.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/TableORMOperation.hpp
+-    ${WCDB_SRC_DIR}/cpp/*/Update.hpp
+-    ${WCDB_SRC_DIR}/cpp/WCDBCpp.h
++        ${WCDB_SRC_DIR}/common/*/AggregateFunction.hpp
++        ${WCDB_SRC_DIR}/common/*/AuxiliaryFunctionModule.hpp
++        ${WCDB_SRC_DIR}/common/*/BaseBinding.hpp
++        ${WCDB_SRC_DIR}/common/*/BaseTokenizerUtil.hpp
++        ${WCDB_SRC_DIR}/common/*/BindParameter.hpp
++        ${WCDB_SRC_DIR}/common/*/CaseInsensitiveList.hpp
++        ${WCDB_SRC_DIR}/common/*/Column.hpp
++        ${WCDB_SRC_DIR}/common/*/ColumnConstraint.hpp
++        ${WCDB_SRC_DIR}/common/*/ColumnDef.hpp
++        ${WCDB_SRC_DIR}/common/*/ColumnType.hpp
++        ${WCDB_SRC_DIR}/common/*/CommonTableExpression.hpp
++        ${WCDB_SRC_DIR}/common/*/Convertible.hpp
++        ${WCDB_SRC_DIR}/common/*/ConvertibleImplementation.hpp
++        ${WCDB_SRC_DIR}/common/*/CoreFunction.hpp
++        ${WCDB_SRC_DIR}/common/*/Data.hpp
++        ${WCDB_SRC_DIR}/common/*/WCDBError.hpp
++        ${WCDB_SRC_DIR}/common/*/Expression.hpp
++        ${WCDB_SRC_DIR}/common/*/ExpressionOperable.hpp
++        ${WCDB_SRC_DIR}/common/*/Filter.hpp
++        ${WCDB_SRC_DIR}/common/*/ForeignKey.hpp
++        ${WCDB_SRC_DIR}/common/*/FrameSpec.hpp
++        ${WCDB_SRC_DIR}/common/*/FTSFunction.hpp
++        ${WCDB_SRC_DIR}/common/*/FTS5AuxiliaryFunctionTemplate.hpp
++        ${WCDB_SRC_DIR}/common/*/FTSConst.h
++        ${WCDB_SRC_DIR}/common/*/FTSError.hpp
++        ${WCDB_SRC_DIR}/common/*/IndexedColumn.hpp
++        ${WCDB_SRC_DIR}/common/*/Join.hpp
++        ${WCDB_SRC_DIR}/common/*/JoinConstraint.hpp
++        ${WCDB_SRC_DIR}/common/*/LiteralValue.hpp
++        ${WCDB_SRC_DIR}/common/*/Macro.h
++        ${WCDB_SRC_DIR}/common/*/MemberPointer.hpp
++        ${WCDB_SRC_DIR}/common/*/OneOrBinaryTokenizer.hpp
++        ${WCDB_SRC_DIR}/common/*/OrderingTerm.hpp
++        ${WCDB_SRC_DIR}/common/*/Pragma.hpp
++        ${WCDB_SRC_DIR}/common/*/QualifiedTable.hpp
++        ${WCDB_SRC_DIR}/common/*/RaiseFunction.hpp
++        ${WCDB_SRC_DIR}/common/*/Recyclable.hpp
++        ${WCDB_SRC_DIR}/common/*/RecyclableHandle.hpp
++        ${WCDB_SRC_DIR}/common/*/ResultColumn.hpp
++        ${WCDB_SRC_DIR}/common/*/ScalarFunctionModule.hpp
++        ${WCDB_SRC_DIR}/common/*/Schema.hpp
++        ${WCDB_SRC_DIR}/common/*/Shadow.hpp
++        ${WCDB_SRC_DIR}/common/*/SharedThreadedErrorProne.hpp
++        ${WCDB_SRC_DIR}/common/*/SQL.hpp
++        ${WCDB_SRC_DIR}/common/*/Statement.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementAlterTable.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementAnalyze.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementAttach.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementBegin.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementCommit.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementCreateIndex.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementCreateTable.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementCreateTrigger.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementCreateView.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementCreateVirtualTable.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementDelete.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementDetach.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementDropIndex.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementDropTable.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementDropTrigger.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementDropView.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementExplain.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementInsert.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementPragma.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementReindex.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementRelease.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementRollback.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementSavepoint.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementSelect.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementUpdate.hpp
++        ${WCDB_SRC_DIR}/common/*/StatementVacuum.hpp
++        ${WCDB_SRC_DIR}/common/*/StringView.hpp
++        ${WCDB_SRC_DIR}/common/*/SubstringMatchInfo.hpp
++        ${WCDB_SRC_DIR}/common/*/Syntax.h
++        ${WCDB_SRC_DIR}/common/*/SyntaxAlterTableSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxAnalyzeSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxAttachSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxBeginSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxBindParameter.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxColumn.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxColumnConstraint.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxColumnDef.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxCommitSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxCommonConst.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxCommonTableExpression.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxCreateIndexSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxCreateTableSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxCreateTriggerSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxCreateViewSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxCreateVirtualTableSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxDeleteSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxDetachSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxDropIndexSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxDropTableSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxDropTriggerSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxDropViewSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxExplainSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxExpression.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxFilter.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxForeignKeyClause.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxForwardDeclaration.h
++        ${WCDB_SRC_DIR}/common/*/SyntaxFrameSpec.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxIdentifier.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxIndexedColumn.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxInsertSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxJoinClause.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxJoinConstraint.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxList.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxLiteralValue.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxOrderingTerm.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxPragma.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxPragmaSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxQualifiedTableName.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxRaiseFunction.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxReindexSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxReleaseSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxResultColumn.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxRollbackSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxSavepointSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxSchema.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxSelectCore.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxSelectSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxTableConstraint.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxTableOrSubquery.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxUpdateSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxUpsertClause.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxVacuumSTMT.hpp
++        ${WCDB_SRC_DIR}/common/*/SyntaxWindowDef.hpp
++        ${WCDB_SRC_DIR}/common/*/TableConstraint.hpp
++        ${WCDB_SRC_DIR}/common/*/TableOrSubquery.hpp
++        ${WCDB_SRC_DIR}/common/*/Tag.hpp
++        ${WCDB_SRC_DIR}/common/*/TokenizerModule.hpp
++        ${WCDB_SRC_DIR}/common/*/TokenizerModuleTemplate.hpp
++        ${WCDB_SRC_DIR}/common/*/SysTypes.h
++        ${WCDB_SRC_DIR}/common/*/UnsafeData.hpp
++        ${WCDB_SRC_DIR}/common/*/Upsert.hpp
++        ${WCDB_SRC_DIR}/common/*/Value.hpp
++        ${WCDB_SRC_DIR}/common/*/ValueArray.hpp
++        ${WCDB_SRC_DIR}/common/*/WindowDef.hpp
++        ${WCDB_SRC_DIR}/common/*/WINQ.h
++        ${WCDB_SRC_DIR}/common/*/WCDBOptional.hpp
++        ${WCDB_SRC_DIR}/cpp/*/Accessor.hpp
++        ${WCDB_SRC_DIR}/cpp/*/BaseOperation.hpp
++        ${WCDB_SRC_DIR}/cpp/*/Binding.hpp
++        ${WCDB_SRC_DIR}/cpp/*/Builtin.h
++        ${WCDB_SRC_DIR}/cpp/*/ChainCall.hpp
++        ${WCDB_SRC_DIR}/cpp/*/CPPBindingMacro.h
++        ${WCDB_SRC_DIR}/cpp/*/CPPColumnConstraintMacro.h
++        ${WCDB_SRC_DIR}/cpp/*/CPPDeclaration.h
++        ${WCDB_SRC_DIR}/cpp/*/CPPFieldMacro.h
++        ${WCDB_SRC_DIR}/cpp/*/CPPIndexMacro.h
++        ${WCDB_SRC_DIR}/cpp/*/CppInterface.h
++        ${WCDB_SRC_DIR}/cpp/*/CPPORM.h
++        ${WCDB_SRC_DIR}/cpp/*/CPPORMMacro.h
++        ${WCDB_SRC_DIR}/cpp/*/CPPTableConstraintMacro.h
++        ${WCDB_SRC_DIR}/cpp/*/CPPVirtualTableMacro.h
++        ${WCDB_SRC_DIR}/cpp/*/Database.hpp
++        ${WCDB_SRC_DIR}/cpp/*/Delete.hpp
++        ${WCDB_SRC_DIR}/cpp/*/Field.hpp
++        ${WCDB_SRC_DIR}/cpp/*/FTSTokenizerUtil.hpp
++        ${WCDB_SRC_DIR}/cpp/*/Handle.hpp
++        ${WCDB_SRC_DIR}/cpp/*/HandleOperation.hpp
++        ${WCDB_SRC_DIR}/cpp/*/HandleORMOperation.hpp
++        ${WCDB_SRC_DIR}/cpp/*/Insert.hpp
++        ${WCDB_SRC_DIR}/cpp/*/Master.hpp
++        ${WCDB_SRC_DIR}/cpp/*/MultiObject.hpp
++        ${WCDB_SRC_DIR}/cpp/*/MultiSelect.hpp
++        ${WCDB_SRC_DIR}/cpp/*/PreparedStatement.hpp
++        ${WCDB_SRC_DIR}/cpp/*/ResultField.hpp
++        ${WCDB_SRC_DIR}/cpp/*/RunTimeAccessor.hpp
++        ${WCDB_SRC_DIR}/cpp/*/STDOptionalAccessor.hpp
++        ${WCDB_SRC_DIR}/cpp/*/WCDBOptionalAccessor.hpp
++        ${WCDB_SRC_DIR}/cpp/*/SharedPtrAccessor.hpp
++        ${WCDB_SRC_DIR}/cpp/*/Select.hpp
++        ${WCDB_SRC_DIR}/cpp/*/Sequence.hpp
++        ${WCDB_SRC_DIR}/cpp/*/StatementOperation.hpp
++        ${WCDB_SRC_DIR}/cpp/*/Table.hpp
++        ${WCDB_SRC_DIR}/cpp/*/TableOperation.hpp
++        ${WCDB_SRC_DIR}/cpp/*/TableORMOperation.hpp
++        ${WCDB_SRC_DIR}/cpp/*/Update.hpp
++        ${WCDB_SRC_DIR}/cpp/WCDBCpp.h
+ )
+ 
+-if (WCONAN_MODE)
+-    set(EXPORT_PUBLIC_HEADERS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../WeChat/export_headers)
+-else ()
+-    set(EXPORT_PUBLIC_HEADERS_PATH ${CMAKE_CURRENT_BINARY_DIR}/export_headers)
+-endif()
++set(EXPORT_PUBLIC_HEADERS_PATH ${CMAKE_CURRENT_BINARY_DIR}/export_headers)
+ 
+ # export public headers
+-if (WCDB_CPP) 
++if (WCDB_CPP)
+     file(REMOVE_RECURSE ${EXPORT_PUBLIC_HEADERS_PATH})
+     file(MAKE_DIRECTORY ${EXPORT_PUBLIC_HEADERS_PATH}/WCDB)
+     file(COPY ${WCDB_PUBLIC_HEADERS} DESTINATION ${EXPORT_PUBLIC_HEADERS_PATH}/WCDB)
+-endif()
++endif ()
+ 
+ # platform define, available platforms:
+ # ANDROID, APPLE(MACOS/IOS/...), WIN32, LINUX
+@@ -275,9 +265,9 @@ if (APPLE)
+ elseif (ANDROID)
+     message(STATUS "PLATFORM: ${ANDROID_PLATFORM} ${ANDROID_ABI}")
+     set(ANDROID_ARCH_LIST armeabi-v7a arm64-v8a x86 x86_64)
+-    if(NOT ${ANDROID_ABI} IN_LIST ANDROID_ARCH_LIST)
++    if (NOT ${ANDROID_ABI} IN_LIST ANDROID_ARCH_LIST)
+         message(FATAL_ERROR "unsupported ANDROID_ABI ${ANDROID_ABI}")
+-    endif()
++    endif ()
+ elseif (WIN32)
+     if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+         set(X86_ARCH "x86_64")
+@@ -306,18 +296,17 @@ if (NOT DEFINED CMAKE_BUILD_TYPE)
+     set(CMAKE_BUILD_TYPE "Release")
+ endif ()
+ 
+-if (NOT DEFINED BUILD_SHARED_LIBS)
+-    set(BUILD_SHARED_LIBS ON)
+-endif ()
+ 
+ if (ANDROID AND NOT DEFINED ANDROID_STL)
+     set(ANDROID_STL "c++_shared")
+ endif ()
+ 
++add_library(${TARGET_NAME} ${WCDB_COMMON_SRC})
++
+ # set default compiler flags for each platform
+ if (WIN32)
+     enable_language(C CXX ASM_MASM)
+-    set(COMM_FLAGS_ "/utf-8 /EHsc")
++    set(COMM_FLAGS_ "/utf-8 /EHsc /wd4068")
+     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${COMM_FLAGS_}")
+     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMM_FLAGS_}")
+     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
+@@ -327,27 +316,30 @@ if (WIN32)
+         add_definitions(-D_WIN64 -DWIN64)
+     endif ()
+ 
+-    if (BUILD_SHARED_LIBS) 
++    if (BUILD_SHARED_LIBS)
+         set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+         #add_definitions(-DWCDB_DLL -DWCDB_BUILD_DLL)
+-    endif ()
+-    
+-    if (BUILD_SHARED_LIBS)
+-        target_compile_options(sqlcipher PRIVATE 
+-            $<$<CONFIG:>:/MD> #---------|
+-            $<$<CONFIG:Debug>:/MDd> #---|-- Dynamic link the runtime libraries
+-            $<$<CONFIG:Release>:/MD> #--|
+-            $<$<CONFIG:RelWithDebInfo>:/MD>
+-        )
++        if (MSVC)
++            set_property(TARGET ${TARGET_NAME} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
++        endif ()
++        #        add_compile_options(
++        #            $<$<CONFIG:>:/MD> #---------|
++        #            $<$<CONFIG:Debug>:/MDd> #---|-- Dynamically link the runtime libraries
++        #            $<$<CONFIG:Release>:/MD> #--|
++        #        )
+     else ()
+-        target_compile_options(sqlcipher PRIVATE 
+-            $<$<CONFIG:>:/MT> #---------|
+-            $<$<CONFIG:Debug>:/MTd> #---|-- Statically link the runtime libraries
+-            $<$<CONFIG:Release>:/MT> #--|
+-            $<$<CONFIG:RelWithDebInfo>:/MT>
+-        )
+-    endif()
+-    
++        if (MSVC)
++            set_property(TARGET ${TARGET_NAME} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
++        endif ()
++        #        add_compile_options(
++        #            $<$<CONFIG:>:/MT> #---------|
++        #            $<$<CONFIG:Debug>:/MTd> #---|-- Statically link the runtime libraries
++        #            $<$<CONFIG:Release>:/MT> #--|
++        #            $<$<CONFIG:RelWithDebInfo>:/MT>
++        #        )
++    endif ()
++
++
+     add_compile_options(/MP)
+     add_compile_options(/wd4068)  # Disable unknown pragma warnings
+     add_compile_options(/wd4996)
+@@ -370,7 +362,7 @@ else ()
+     elseif (ANDROID)
+         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+-    endif()
++    endif ()
+ 
+     if (APPLE)
+         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-dead_strip")
+@@ -389,13 +381,17 @@ set(CMAKE_CXX_STANDARD 14)
+ set(CMAKE_CXX_STANDARD_REQUIRED ON)
+ set(CMAKE_CXX_EXTENSIONS OFF)
+ 
+-add_library(${TARGET_NAME} ${WCDB_COMMON_SRC})
+-target_link_libraries(${TARGET_NAME} PRIVATE sqlcipher)
+-target_include_directories(${TARGET_NAME} PUBLIC ${WCDB_COMMON_INCLUDES})
++target_include_directories(${TARGET_NAME}
++        PRIVATE
++        $<BUILD_INTERFACE:${WCDB_COMMON_INCLUDES}>
++        PUBLIC
++        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
++)
+ 
+ if (WCDB_ZSTD)
+-    include(zstd.cmake)
+-    target_link_libraries(${TARGET_NAME} PRIVATE zstd)
++    #    include(zstd.cmake)
++    find_package(zstd CONFIG REQUIRED)
++    target_link_libraries(${TARGET_NAME} PRIVATE zstd::libzstd)
+     target_compile_definitions(${TARGET_NAME} PRIVATE WCDB_ZSTD=1)
+ endif ()
+ 
+@@ -403,161 +399,120 @@ if (WIN32)
+     target_compile_options(${TARGET_NAME} PRIVATE /EHsc)
+ else ()
+     target_compile_options(${TARGET_NAME} PRIVATE -fno-exceptions)
+-endif()
++endif ()
+ 
+ if (WCDB_CPP)
+     target_sources(${TARGET_NAME} PRIVATE ${WCDB_CPP_SRC})
+-    target_include_directories(${TARGET_NAME} PUBLIC ${WCDB_CPP_INCLUDES})
++    target_include_directories(${TARGET_NAME}
++            PRIVATE
++            $<BUILD_INTERFACE:${WCDB_CPP_INCLUDES}>
++            PUBLIC
++            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
++    )
+ endif ()
+ 
+ if (WCDB_BRIDGE)
+     target_sources(${TARGET_NAME} PRIVATE ${WCDB_BRIDGE_SRC})
+-    target_include_directories(${TARGET_NAME} PUBLIC ${WCDB_BRIDGE_INCLUDES})
+-endif ()
+-
+-if (WCONAN_MODE)
+-    wconan_get_libraries_dir(
+-            WCONAN_LIB_DIR
+-            wconan_libs
++    target_include_directories(${TARGET_NAME}
++            PUBLIC
++            $<BUILD_INTERFACE:${WCDB_BRIDGE_INCLUDES}>
++            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+     )
+-    target_include_directories(sqlcipher PUBLIC ${WCONAN_LIB_DIR}/include)
+-    target_link_directories(sqlcipher PUBLIC ${WCONAN_LIB_DIR}/libs)
+-else ()
+-    if (BUILD_SHARED_LIBS)
+-        if(ANDROID)
+-            target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/android_old/${CMAKE_ANDROID_ARCH}/include)
+-            target_link_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/android_old/${CMAKE_ANDROID_ARCH}/lib)
+-            target_include_directories(sqlcipher PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/android_old/${CMAKE_ANDROID_ARCH}/include)
+-            target_link_directories(sqlcipher PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/android_old/${CMAKE_ANDROID_ARCH}/lib)
+-        elseif(LINUX)
+-            target_include_directories(sqlcipher PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/include)
+-            target_link_directories(sqlcipher PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/linux/arm64)
+-            target_link_directories(sqlcipher PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/linux/x86_64)
+-            target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/include)
+-            target_link_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/linux/arm64)
+-            target_link_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/linux/x86_64)
+-            target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/zlib/include)
+-            target_link_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/zlib/linux/arm64)
+-            target_link_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/zlib/linux/x86_64)
+-        elseif(WIN32)
+-            target_include_directories(sqlcipher PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/include)
+-            target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/include)
+-            target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/zlib/include)
+-            if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+-                target_link_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/zlib/windows/win64)
+-                target_link_directories(sqlcipher PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/windows/win64)
+-                target_link_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/windows/win64)
+-            else ()
+-                target_link_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/zlib/windows/win32)
+-                target_link_directories(sqlcipher PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/windows/win32)
+-                target_link_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/windows/win32)
+-            endif()
+-        elseif(OHOS)
+-            target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/include)
+-            target_include_directories(sqlcipher PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/include)
+-            if (${OHOS_ARCH} STREQUAL "arm64-v8a")
+-                target_link_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/ohos/arm64-v8a)
+-                target_link_directories(sqlcipher PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/ohos/arm64-v8a)
+-            elseif(${OHOS_ARCH} STREQUAL "x86_64")
+-                target_link_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/ohos/x86_64)
+-                target_link_directories(sqlcipher PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/ohos/x86_64)
+-            endif()
+-        endif()
+-    else ()
+-        if(ANDROID)
+-            target_include_directories(sqlcipher PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/android_old/${CMAKE_ANDROID_ARCH}/include)
+-            target_link_directories(sqlcipher PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/android_old/${CMAKE_ANDROID_ARCH}/lib)
+-        elseif(LINUX)
+-            target_include_directories(sqlcipher PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/include)
+-            target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/zlib/include)
+-            target_link_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/zlib/linux/arm64)
+-            target_link_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/zlib/linux/x86_64)
+-            target_link_directories(sqlcipher PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/linux/arm64)
+-            target_link_directories(sqlcipher PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/linux/x86_64)
+-        elseif(WIN32)
+-            target_include_directories(sqlcipher PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/include)
+-            target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/zlib/include)
+-            if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+-                target_link_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/zlib/windows/win64)
+-                target_link_directories(sqlcipher PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/windows/win64)
+-            else ()
+-                target_link_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/zlib/windows/win32)
+-                target_link_directories(sqlcipher PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/windows/win32)
+-            endif()
+-        elseif(OHOS)
+-            target_include_directories(sqlcipher PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/include)
+-            if (${OHOS_ARCH} STREQUAL "arm64-v8a")
+-                target_link_directories(sqlcipher PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/ohos/arm64-v8a)
+-            elseif(${OHOS_ARCH} STREQUAL "x86_64")
+-                target_link_directories(sqlcipher PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../tools/prebuild/openssl/ohos/x86_64)
+-            endif()
+-        endif()
+-    endif()
+ endif ()
+ 
++
++target_link_libraries(${TARGET_NAME}
++        PUBLIC
++        ZLIB::ZLIB
++        sqlcipher::sqlcipher
++)
++
+ if (ANDROID)
+     message(STATUS "---- BUILD FOR ANDROID ----")
+-    find_library(z-lib z)
+     target_link_libraries(${TARGET_NAME} PUBLIC
+             ${LINK_LIBRARIES}
+-            ${z-lib})
+-    if (BUILD_SHARED_LIBS)
+-        target_link_libraries(${TARGET_NAME} PRIVATE crypto)
+-    else()
+-        target_link_libraries(${TARGET_NAME} PUBLIC crypto)
+-    endif()
++            crypto)
+ elseif (APPLE AND NOT WCONAN_MODE)
+     message(STATUS "---- BUILD FOR APPLE ----")
+     find_library(SecurityFramework Security)
+     find_library(FoundationFrameWork Foundation)
+-    find_library(z-lib z)
+     target_link_libraries(${TARGET_NAME} PUBLIC
+             ${LINK_LIBRARIES}
+             ${SecurityFramework}
+             ${FoundationFrameWork}
+-            ${z-lib})
+-    target_sources(${TARGET_NAME} PUBLIC ${WCDB_PUBLIC_HEADERS})
++    )
+     file(STRINGS "../VERSION" WCDB_VERSION)
+     message(STATUS "Xcode ${TARGET_NAME}.framework version ${WCDB_VERSION}")
+     set_target_properties(${TARGET_NAME} PROPERTIES
+-        FRAMEWORK TRUE
+-        FRAMEWORK_VERSION ${WCDB_VERSION}
+-        MACOSX_FRAMEWORK_IDENTIFIER com.tencent.${TARGET_NAME}
+-        PUBLIC_HEADER "${WCDB_PUBLIC_HEADERS}"
++            FRAMEWORK TRUE
++            FRAMEWORK_VERSION ${WCDB_VERSION}
++            MACOSX_FRAMEWORK_IDENTIFIER com.tencent.${TARGET_NAME}
++            PUBLIC_HEADER "${WCDB_PUBLIC_HEADERS}"
+     )
+ elseif (OHOS)
+     message(STATUS "---- BUILD FOR OPENHARMONY ----")
+     target_link_libraries(${TARGET_NAME} PUBLIC
+             ${LINK_LIBRARIES}
++            crypto
+             pthread
+-            z)
+-    if (BUILD_SHARED_LIBS)
+-        target_link_libraries(${TARGET_NAME} PRIVATE crypto)
+-    else()
+-        target_link_libraries(${TARGET_NAME} PUBLIC crypto)
+-    endif()
++    )
+ elseif (LINUX)
+     message(STATUS "---- BUILD FOR LINUX ----")
+     target_link_libraries(${TARGET_NAME} PUBLIC
+             ${LINK_LIBRARIES}
++            crypto
+             pthread
+             dl)
+-    if (BUILD_SHARED_LIBS)
+-        target_link_libraries(${TARGET_NAME} PRIVATE crypto z)
+-    else()
+-        target_link_libraries(${TARGET_NAME} PUBLIC crypto z)
+-    endif()
+ elseif (WIN32)
+     message(STATUS "---- BUILD FOR WINDOWS ----")
+     target_link_libraries(${TARGET_NAME} PUBLIC
+             ${LINK_LIBRARIES}
+             Crypt32
+             Ws2_32)
+-    if (BUILD_SHARED_LIBS)
+-        target_link_libraries(${TARGET_NAME} PRIVATE libcrypto zlibstatic)
+-    else()
+-        target_link_libraries(${TARGET_NAME} PUBLIC libcrypto zlibstatic)
+-    endif()
+ else ()
+     message(FATAL_ERROR "Unsupported platform!")
+ endif ()
++
++# 设置安装目录
++set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
++
++# 安装头文件
++install(DIRECTORY ${EXPORT_PUBLIC_HEADERS_PATH}/WCDB
++        DESTINATION include/)
++
++# Export the target
++export(TARGETS ${TARGET_NAME} FILE ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}Targets.cmake)
++
++# Install the target
++install(TARGETS ${TARGET_NAME}
++        EXPORT ${TARGET_NAME}Targets
++        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
++        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
++        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
++        FRAMEWORK DESTINATION "${CMAKE_INSTALL_LIBDIR}/Frameworks"
++)
++
++install(EXPORT ${TARGET_NAME}Targets
++        FILE ${TARGET_NAME}Targets.cmake
++        NAMESPACE ${TARGET_NAME}::
++        DESTINATION share/${TARGET_NAME}
++)
++
++# 生成配置文件
++include(CMakePackageConfigHelpers)
++write_basic_package_version_file(
++        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
++        VERSION ${PROJECT_VERSION}
++        COMPATIBILITY AnyNewerVersion
++)
++
++configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
++        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
++        @ONLY
++)
++
++install(FILES
++        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
++        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
++        DESTINATION share/${PROJECT_NAME}
++)
+diff --git a/src/cmake/Config.cmake.in b/src/cmake/Config.cmake.in
+new file mode 100644
+index 000000000..9e51d928e
+--- /dev/null
++++ b/src/cmake/Config.cmake.in
+@@ -0,0 +1,3 @@
++@PACKAGE_INIT@
++
++include("${CMAKE_CURRENT_LIST_DIR}/WCDBTargets.cmake")
+\ No newline at end of file
+diff --git a/src/common/core/compression/CompressionCenter.cpp b/src/common/core/compression/CompressionCenter.cpp
+index ea00bfbc5..c6fc4430d 100644
+--- a/src/common/core/compression/CompressionCenter.cpp
++++ b/src/common/core/compression/CompressionCenter.cpp
+@@ -31,8 +31,8 @@
+ #include <string.h>
+ #if defined(WCDB_ZSTD) && WCDB_ZSTD
+ #define ZDICT_STATIC_LINKING_ONLY 1
+-#include <zstd/zdict.h>
+-#include <zstd/zstd.h>
++#include <zdict.h>
++#include <zstd.h>
+ #endif
+ 
+ namespace WCDB {
+diff --git a/src/common/core/compression/ZSTDContext.cpp b/src/common/core/compression/ZSTDContext.cpp
+index a669fa6b8..d4a38301c 100644
+--- a/src/common/core/compression/ZSTDContext.cpp
++++ b/src/common/core/compression/ZSTDContext.cpp
+@@ -26,7 +26,7 @@
+ #include <memory>
+ #include <stdlib.h>
+ #if defined(WCDB_ZSTD) && WCDB_ZSTD
+-#include <zstd/zstd.h>
++#include <zstd.h>
+ #endif
+ 
+ namespace WCDB {
+diff --git a/src/common/core/compression/ZSTDDict.cpp b/src/common/core/compression/ZSTDDict.cpp
+index bba1916b8..e0805f9d0 100644
+--- a/src/common/core/compression/ZSTDDict.cpp
++++ b/src/common/core/compression/ZSTDDict.cpp
+@@ -29,8 +29,8 @@
+ #include <stdlib.h>
+ #if defined(WCDB_ZSTD) && WCDB_ZSTD
+ #define ZSTD_STATIC_LINKING_ONLY
+-#include <zstd/zdict.h>
+-#include <zstd/zstd.h>
++#include <zdict.h>
++#include <zstd.h>
+ #endif
+ 
+ namespace WCDB {
