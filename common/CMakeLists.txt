@@ -8,10 +8,11 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(easyloggingpp easyloggingpp REQUIRED IMPORTED_TARGET)
 
 add_library(${PROJECT_NAME}
-    src/Common.cpp
+        src/Common.cpp
+        src/logger_helper.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 target_link_libraries(${PROJECT_NAME} PUBLIC PkgConfig::easyloggingpp)

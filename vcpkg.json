@@ -32,5 +32,8 @@
   }, {
     "name" : "easyloggingpp",
     "version>=" : "9.97.1#1"
+  }, {
+    "name" : "boost-asio",
+    "version>=" : "1.87.0#1"
   } ]
 }
