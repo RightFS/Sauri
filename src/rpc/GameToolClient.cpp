@@ -16,6 +16,7 @@ GameToolApplication::GameToolApplication(
         std::string appPipeName,
         std::string httpUrl,
         std::string localPath,
+        int workerThreads,
         std::string mainPipeName
 ) : appId_(std::move(appId)),
     name_(std::move(name)),
@@ -25,6 +26,7 @@ GameToolApplication::GameToolApplication(
     mainPipeName_(std::move(mainPipeName)),
     httpUrl_(std::move(httpUrl)),
     localPath_(std::move(localPath)),
+    worker_threads_(workerThreads),
     running_(false) {
     InitializeLogger(7, "logs");
 
@@ -86,6 +88,7 @@ GameToolApplication::GameToolApplication(
 }
 
 GameToolApplication::~GameToolApplication() {
+    stopWorkerThreads();
     // 注销应用
     unregisterApp();
 
@@ -108,6 +111,7 @@ GameToolApplication::~GameToolApplication() {
 bool GameToolApplication::initialize() {
     // Start the pipe server first
     LOG(INFO) << "[D] " << "initialize";
+    startWorkerThreads();
     return startPipeServer();
 }
 
@@ -130,7 +134,7 @@ bool GameToolApplication::registerSelf() {
                     .icon = iconPath_,
                     .pipeName = appPipeName_,
                     .functions = std::move(get_map_keys(function_map_)),
-                    .events = std::move(event_list_)
+                    .events = event_list_
             }
     };
 
@@ -257,7 +261,50 @@ void GameToolApplication::exec() {
         LOG(INFO) << "[D] " << "serverThread_ join";
     }
 }
+void GameToolApplication::handleRpcRequest(const BaseRpcMessage &msg) {
+    // Make a copy of the message for the task
+    BaseRpcMessage msgCopy = msg;
 
+    // Add task to queue
+    {
+        std::lock_guard<std::mutex> lock(task_mutex_);
+        tasks_.emplace([this, msgCopy]() {
+            RpcResponse response;
+            try {
+                auto request = msgCopy.payload.get<RpcRequest>();
+                response.id = request.id;
+
+                if (function_map_.find(request.method) != function_map_.end()) {
+                    try {
+                        response.result = function_map_[request.method](request.params);
+                    }
+                    catch (const std::exception &e) {
+                        response.hasError = true;
+                        response.error.code = static_cast<int>(RpcErrorCode::function_internal_error);
+                        response.error.message = e.what();
+                    }
+                } else {
+                    response.hasError = true;
+                    response.error.code = static_cast<int>(RpcErrorCode::function_not_found);
+                    response.error.message = "Method '" + request.method + "' not found";
+                }
+            }
+            catch (const json::exception &e) {
+                response.id = "unknown";
+                response.hasError = true;
+                response.error.code = static_cast<int>(RpcErrorCode::payload_invalid);
+                response.error.message = "Invalid payload: " + std::string(e.what());
+            }
+
+            auto responseMessage = CreateResponseMessage(msgCopy.appId, json(response));
+            sendMessage(responseMessage);
+        });
+    }
+
+    // Notify one worker thread that a new task is available
+    task_cv_.notify_one();
+}
+/*
 void GameToolApplication::handleRpcRequest(const BaseRpcMessage &msg) {
     RpcResponse response;
     try {
@@ -296,9 +343,9 @@ void GameToolApplication::handleRpcRequest(const BaseRpcMessage &msg) {
     auto responseMessage = CreateResponseMessage(msg.appId, json(response));
     sendMessage(responseMessage);
 }
-
+*/
 void GameToolApplication::emitEvent(const std::string &event_name, const json &data) {
-    if(!event_list_.contains(event_name)){
+    if (!event_list_.contains(event_name)) {
         LOG(INFO) << "[E] " << "Event not declared: " << event_name;
         return;
     }
@@ -318,7 +365,44 @@ void GameToolApplication::declareEvent(const std::string &event_name) {
 }
 
 void GameToolApplication::declareEvents(const std::vector<std::string> &event_names) {
-    for (const auto& event_name : event_names) {
+    for (const auto &event_name: event_names) {
         declareEvent(event_name);
     }
 }
+
+void GameToolApplication::startWorkerThreads() {
+    for (size_t i = 0; i < num_workers_; ++i) {
+        worker_threads_.emplace_back([this] {
+            while (true) {
+                std::function < void() > task;
+                {
+                    std::unique_lock<std::mutex> lock(task_mutex_);
+                    task_cv_.wait(lock, [this] { return shutdown_ || !tasks_.empty(); });
+
+                    if (shutdown_ && tasks_.empty()) {
+                        return;
+                    }
+
+                    task = std::move(tasks_.front());
+                    tasks_.pop();
+                }
+                task();
+            }
+        });
+    }
+}
+
+void GameToolApplication::stopWorkerThreads() {
+    {
+        std::lock_guard<std::mutex> lock(task_mutex_);
+        shutdown_ = true;
+    }
+    task_cv_.notify_all();
+    for (auto &thread: worker_threads_) {
+        if (thread.joinable()) {
+            thread.join();
+        }
+    }
+    worker_threads_.clear();
+}
+

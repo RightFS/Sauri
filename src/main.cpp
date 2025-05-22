@@ -62,12 +62,33 @@ int main(int argc, char **argv) {
     app.bind("power", [](double a, double b) {
         return pow(a, b);
     });
-    app.declareEvents({"refresh-ui", "messagebox"});
+
+    app.bind("alert", [&app](const std::string &message) {
+        std::cout << "Alert: " << message << std::endl;
+        app.emitEvent("alert", {{"message", std::string(message) + " from C++"}});
+    });
+    app.declareEvents({"refresh-ui", "messagebox", "alert"});
 // Initialize the pipe server first
     if (app.initialize()) {
         // Then register with Electron
         app.registerSelf();
 
+        // Create a thread to read from stdin
+        std::thread inputThread([&app]() {
+            std::string line;
+            std::cout << "Type a message and press Enter to send an alert event (Ctrl+C to exit):" << std::endl;
+
+            while (std::getline(std::cin, line)) {
+                if (!line.empty()) {
+                    app.emitEvent("alert", {{"message", line}});
+                    std::cout << "Alert sent: " << line << std::endl;
+                }
+                std::cout << "Type another message (Ctrl+C to exit):" << std::endl;
+            }
+        });
+
+        // Detach the thread to let it run independently
+        inputThread.detach();
         app.exec();
     }
 }
