@@ -6,12 +6,14 @@
 #include <logger_helper.h>
 
 INITIALIZE_EASYLOGGINGPP
+
 double divide(double a, double b) {
     if (b == 0.0) {
         throw std::runtime_error("Division by zero");
     }
     return a / b;
 }
+
 struct subtractor {
     double operator()(double a, double b) {
         return a - b;
@@ -24,7 +26,7 @@ struct multiplier {
     }
 };
 
-int main(int argc, char** argv){
+int main(int argc, char **argv) {
     subtractor s;
     multiplier m;
     // 创建客户端
@@ -34,7 +36,7 @@ int main(int argc, char** argv){
             "应用描述",                    // Description
             "图标路径",                    // Icon
             "GameToolPipe",                 // Pipe name
-            "http://localhost:8081/index.html", // HTTP URL
+            "http://localhost:3000", // HTTP URL
             ""                             // Local path (optional)
     );
     // 简单的加法函数
@@ -45,12 +47,11 @@ int main(int argc, char** argv){
     app.bind("divide", &divide);
 
     // 字符串连接函数
-    app.bind("concat", [](const std::string& a, const std::string& b) -> std::string {
+    app.bind("concat", [](const std::string &a, const std::string &b) -> std::string {
         std::cout << "Called concat(\"" << a << "\", \"" << b << "\")" << std::endl;
         return a + b;
     });
 
-    app.bind("sub", s);
     // ... free functions
     app.bind("div", &divide);
     // ... member functions with captured instances in lambdas
@@ -58,17 +59,15 @@ int main(int argc, char** argv){
     app.bind("init", []() {
         return "ok";
     });
+    app.bind("power", [](double a, double b) {
+        return pow(a, b);
+    });
+    app.declareEvents({"refresh-ui", "messagebox"});
 // Initialize the pipe server first
     if (app.initialize()) {
-
         // Then register with Electron
-        app.registerApp();
+        app.registerSelf();
 
-        // Set message handler
-        app.setMessageHandler([](const json& message, json& response) {
-            // Handle messages from Electron
-            std::cout << "Received message: " << message.dump() << std::endl;
-        });
         app.exec();
     }
 }

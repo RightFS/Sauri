@@ -10,6 +10,7 @@
 #include <mutex>
 #include <atomic>
 #include <queue>
+#include <unordered_set>
 #include "pipe/NamedPipeClient.h"
 #include "pipe/NamedPipeServer.h"
 #include "nlohmann/json.hpp"
@@ -38,13 +39,10 @@ public:
     bool initialize();
 
     // Connect to Dock and register the app
-    bool registerApp();
+    bool registerSelf();
 
     // 注销应用
     bool unregisterApp();
-
-    // 设置消息处理回调
-    void setMessageHandler(MessageCallback handler);
 
     // 启动应用管道服务器
     bool startPipeServer();
@@ -61,6 +59,10 @@ public:
             return rpc::detail::call_with_json_params(f, params);
         };
     }
+
+    void declareEvent(const std::string& event_name);
+    void declareEvents(const std::vector<std::string>& event_names);
+    void emitEvent(const std::string& event_name, const json& data);
 
 private:
     // 连接到Dock主管道
@@ -80,7 +82,6 @@ private:
     std::string iconPath_;
     std::string httpUrl_;
     std::string localPath_;
-    MessageCallback messageHandler_;
 
     // 应用管道服务器
     std::thread serverThread_;
@@ -96,4 +97,6 @@ private:
     asio::io_context io_context_server_;
 
     std::unordered_map <std::string, std::function<json(const json &)>> function_map_;
+    std::unordered_set<std::string> event_list_;
+    bool sendMessage(const BaseRpcMessage &message);
 };

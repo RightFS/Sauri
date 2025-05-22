@@ -18,21 +18,29 @@ struct RegisterMsg {
     struct AppInfo {
         std::string name;
         std::string description;
-        std::string iconPath;
+        std::string icon;
         std::string pipeName;
         std::string httpUrl;
         std::string localPath;
+        std::vector<std::string> functions;
+        std::unordered_set<std::string> events;
     } appInfo;
 
     // to json
-    json toJson() const {
+    [[nodiscard]] json toJson() const {
         json j;
         j["command"] = command;
         j["appId"] = appId;
         j["appInfo"]["name"] = appInfo.name;
         j["appInfo"]["description"] = appInfo.description;
-        j["appInfo"]["iconPath"] = appInfo.iconPath;
+        j["appInfo"]["icon"] = appInfo.icon;
         j["appInfo"]["pipeName"] = appInfo.pipeName;
+        if (!appInfo.functions.empty()) {
+            j["appInfo"]["functions"] = appInfo.functions;
+        }
+        if (!appInfo.events.empty()) {
+            j["appInfo"]["events"] = appInfo.events;
+        }
         if (!appInfo.httpUrl.empty()) {
             j["appInfo"]["httpUrl"] = appInfo.httpUrl;
         }
@@ -49,7 +57,7 @@ struct RegisterMsg {
         msg.appId = j["appId"];
         msg.appInfo.name = j["appInfo"]["name"];
         msg.appInfo.description = j["appInfo"]["description"];
-        msg.appInfo.iconPath = j["appInfo"]["iconPath"];
+        msg.appInfo.icon = j["appInfo"]["icon"];
         msg.appInfo.pipeName = j["appInfo"]["pipeName"];
         if (j["appInfo"].contains("httpUrl")) {
             msg.appInfo.httpUrl = j["appInfo"]["httpUrl"];
@@ -69,20 +77,29 @@ struct RpcRequest {
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(RpcRequest, id, method, params)
 };
 struct RpcResponseError {
-    int code;
+    int code{};
     std::string message;
     json data;
-    bool has_error{false};
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(RpcResponseError, code, message, data, has_error)
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(RpcResponseError, code, message, data)
 };
 // RPC 响应消息结构
 struct RpcResponse {
     std::string id;
     json result;
+    bool hasError{false};
     RpcResponseError error;
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(RpcResponse, id, result, error)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(RpcResponse, id, hasError, result, error)
+};
+
+// RPC 响应消息结构
+struct RpcEvent {
+    std::string id;
+    std::string event;
+    json data;
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(RpcEvent, id, event, data)
 };
 
 struct HandshakeMessage {
@@ -106,6 +123,7 @@ struct BaseRpcMessage {
 enum class RpcErrorCode {
     function_not_found = 404,
     function_internal_error = 500,
+    payload_invalid = 400,
 };
 
 inline BaseRpcMessage CreateRpcMessage(const std::string &appId, const std::string &type, nlohmann::json payload) {
@@ -121,4 +139,12 @@ inline BaseRpcMessage CreateRpcMessage(const std::string &appId, const std::stri
 
 inline BaseRpcMessage CreateHandshakeMessage(const std::string &appId, nlohmann::json payload) {
     return CreateRpcMessage(appId, "handshake", std::move(payload));
+}
+
+inline BaseRpcMessage CreateResponseMessage(const std::string &appId, nlohmann::json payload) {
+    return CreateRpcMessage(appId, "rpc-response", std::move(payload));
+}
+
+inline BaseRpcMessage CreateEventMessage(const std::string &appId, nlohmann::json payload) {
+    return CreateRpcMessage(appId, "rpc-event", std::move(payload));
 }

@@ -33,15 +33,27 @@ GameToolApplication::GameToolApplication(
     client_->set_message_handler([this](const std::string &message) {
         std::cout << "client: " << message << std::endl;
         // 处理消息
-        if (messageHandler_) {
-//            messageHandler_(message);
+        // {"status":"success","message":"Registration request received, initiating handshake"}
+        try {
+            auto msg = json::parse(message);
+            if (msg.contains("status")) {
+                std::string status = msg["status"];
+                if (status == "success") {
+                    LOG(INFO) << "[D] " << "Registration status: " << msg["status"];
+                } else {
+                    LOG(INFO) << "[D] " << "Registration status: " << msg["error"];
+                }
+            }
+        } catch (std::exception &e) {
+            LOG(INFO) << "[E] " << "Error parsing message: " << e.what();
+            return;
         }
     });
 
 
     // 消息处理
     server_->set_message_handler([this](const std::string &message) {
-        std::cout << "server: " << message << std::endl;
+        std::cout << "server recv: " << message << std::endl;
         try {
             auto msg = json::parse(message);
             auto baseMsg = msg.get<BaseRpcMessage>();
@@ -56,7 +68,7 @@ GameToolApplication::GameToolApplication(
             } else if (baseMsg.type == "rpc-request") {
                 handleRpcRequest(baseMsg);
             } else if (baseMsg.type == "rpc-response") {
-                (int)2;
+                (int) 2;
             }
 
         } catch (std::exception &e) {
@@ -99,12 +111,15 @@ bool GameToolApplication::initialize() {
     return startPipeServer();
 }
 
-bool GameToolApplication::registerApp() {
+bool GameToolApplication::registerSelf() {
     // Connect to Electron
     if (!connectToDock()) {
         return false;
     }
-
+    bind("exit", []() {
+        LOG(INFO) << "[D] " << "exit";
+        exit(0);
+    });
     // Create registration message
     RegisterMsg msg{
             .command = "register",
@@ -112,8 +127,10 @@ bool GameToolApplication::registerApp() {
             .appInfo = {
                     .name = name_,
                     .description = description_,
-                    .iconPath = iconPath_,
-                    .pipeName = appPipeName_
+                    .icon = iconPath_,
+                    .pipeName = appPipeName_,
+                    .functions = std::move(get_map_keys(function_map_)),
+                    .events = std::move(event_list_)
             }
     };
 
@@ -128,7 +145,7 @@ bool GameToolApplication::registerApp() {
 
     // Send registration message
     std::string message = msg.toJson().dump() + "\n";
-
+    LOG(INFO) << "[D] " << "client send: " << message;
     client_->write(message);
 
     return true;
@@ -184,10 +201,6 @@ bool GameToolApplication::unregisterApp() {
     return true;
 }
 
-void GameToolApplication::setMessageHandler(MessageCallback handler) {
-    messageHandler_ = std::move(handler);
-}
-
 bool GameToolApplication::startPipeServer() {
     if (running_ || appPipeName_.empty()) {
         return false;
@@ -213,6 +226,16 @@ bool GameToolApplication::startPipeServer() {
     return true;
 }
 
+bool GameToolApplication::sendMessage(const BaseRpcMessage &message) {
+    if (server_->is_connected()) {
+        std::string msg = json(message).dump() + "\n";
+        LOG(INFO) << "[D] " << "server send: " << msg;
+        server_->write(msg);
+        return true;
+    }
+    return false;
+}
+
 bool GameToolApplication::sendMessage(const json &message) {
     if (server_->is_connected()) {
         std::string msg = message.dump() + "\n";
@@ -231,94 +254,71 @@ void GameToolApplication::exec() {
     }
     if (serverThread_.joinable()) {
         serverThread_.join();
+        LOG(INFO) << "[D] " << "serverThread_ join";
     }
 }
 
 void GameToolApplication::handleRpcRequest(const BaseRpcMessage &msg) {
+    RpcResponse response;
     try {
-        // 解析 JSON 消息
-//        auto json_msg = json::parse(message);
-//
-//        // 提取 RPC 请求信息
-//        auto request = json_msg.get<RpcRequest>();
-//        request.id = json_msg["payload"]["id"];
-//        request.method = json_msg["payload"]["method"];
-//
-//        // 提取参数数组
-//        auto& params_json = json_msg["payload"]["params"];
-//        for (auto& param : params_json) {
-//            request.params.push_back(param);
-//        }
         auto request = msg.payload.get<RpcRequest>();
         // 处理请求
-        RpcResponse response;
         response.id = request.id;
-
         // 检查方法是否存在
         if (function_map_.find(request.method) != function_map_.end()) {
             try {
                 // 调用注册的方法
                 response.result = function_map_[request.method](request.params);
             }
-            catch (const std::exception& e) {
+            catch (const std::exception &e) {
                 // 方法执行出错
-                response.error.has_error = true;
+                response.hasError = true;
                 response.error.code = static_cast<int>(RpcErrorCode::function_internal_error);
                 response.error.message = e.what();
             }
-        }
-        else {
+        } else {
             // 方法不存在
-            response.error.has_error = true;
+            response.hasError = true;
             response.error.code = static_cast<int>(RpcErrorCode::function_not_found);
             response.error.message = "Method '" + request.method + "' not found";
         }
 
-        // 创建响应 JSON
-        json response_json;
-        response_json["type"] = "rpc-response";
-        response_json["appId"] = msg.appId;
-        response_json["id"] = msg.id;
-        response_json["timestamp"] = get_current_time_ms();
-
-        json payload;
-        payload["id"] = response.id;
-
-        if (response.error.has_error) {
-            json error;
-            error["code"] = response.error.code;
-            error["message"] = response.error.message;
-            if (!response.error.data.is_null()) {
-                error["data"] = response.error.data;
-            }
-            payload["error"] = error;
-        }
-        else {
-            payload["result"] = response.result;
-        }
-
-        response_json["payload"] = payload;
-
-        // 发送响应
-        sendMessage(response_json.dump());
     }
-    catch (const json::exception& e) {
+    catch (const json::exception &e) {
         // JSON 解析错误
-        json error_response;
-        error_response["type"] = "rpc-response";
-        error_response["id"] = "unknown";
-        error_response["timestamp"] = get_current_time_ms();
+        response.id = "unknown";
+        response.hasError = true;
+        response.error.code = static_cast<int>(RpcErrorCode::payload_invalid);
+        response.error.message = "Invalid payload: " + std::string(e.what());
 
-        json payload;
-        payload["id"] = "unknown";
+    }
 
-        json error;
-        error["code"] = -32700;
-        error["message"] = std::string("Parse error: ") + e.what();
-        payload["error"] = error;
+    auto responseMessage = CreateResponseMessage(msg.appId, json(response));
+    sendMessage(responseMessage);
+}
 
-        error_response["payload"] = payload;
+void GameToolApplication::emitEvent(const std::string &event_name, const json &data) {
+    if(!event_list_.contains(event_name)){
+        LOG(INFO) << "[E] " << "Event not declared: " << event_name;
+        return;
+    }
+    if (server_->is_connected()) {
+        RpcEvent event{
+                .id = to_string(uuids::uuid_system_generator{}()),
+                .event = event_name,
+                .data = data
+        };
+        auto message = CreateEventMessage(appId_, event);
+        sendMessage(message);
+    }
+}
 
-        sendMessage(error_response.dump());
+void GameToolApplication::declareEvent(const std::string &event_name) {
+    event_list_.emplace(event_name);
+}
+
+void GameToolApplication::declareEvents(const std::vector<std::string> &event_names) {
+    for (const auto& event_name : event_names) {
+        declareEvent(event_name);
     }
 }
