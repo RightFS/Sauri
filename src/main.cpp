@@ -12,8 +12,21 @@ double divide(double a, double b) {
     }
     return a / b;
 }
+struct subtractor {
+    double operator()(double a, double b) {
+        return a - b;
+    }
+};
+
+struct multiplier {
+    double multiply(double a, double b) {
+        return a * b;
+    }
+};
 
 int main(int argc, char** argv){
+    subtractor s;
+    multiplier m;
     // 创建客户端
     GameToolApplication app(
             "unique_app_id",               // App ID
@@ -29,12 +42,21 @@ int main(int argc, char** argv){
         std::cout << "Called add(" << a << ", " << b << ")" << std::endl;
         return a + b;
     });
-
     app.bind("divide", &divide);
+
     // 字符串连接函数
     app.bind("concat", [](const std::string& a, const std::string& b) -> std::string {
         std::cout << "Called concat(\"" << a << "\", \"" << b << "\")" << std::endl;
         return a + b;
+    });
+
+    app.bind("sub", s);
+    // ... free functions
+    app.bind("div", &divide);
+    // ... member functions with captured instances in lambdas
+    app.bind("mul", [&m](double a, double b) { return m.multiply(a, b); });
+    app.bind("init", []() {
+        return "ok";
     });
 // Initialize the pipe server first
     if (app.initialize()) {
