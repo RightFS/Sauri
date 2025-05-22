@@ -6,8 +6,8 @@
 #include <functional>
 #include <atomic>
 #include <deque>
-#include <boost/asio.hpp>
-#include <boost/bind/bind.hpp>
+#include "boost/asio.hpp"
+#include "boost/bind/bind.hpp"
 
 using boost::asio::windows::stream_handle;
 using boost::system::error_code;
@@ -40,7 +40,7 @@ public:
 
     void stop();
 
-    // Write data to the connected client
+    // Write payload to the connected client
     void write(const std::string &message);
 
     // Check if a client is connected

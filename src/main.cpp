@@ -1,12 +1,17 @@
 //
 // Created by Right on 25/5/19 星期一 14:52.
 //
-#include "GameToolClient.h"
+#include "rpc/GameToolClient.h"
 
 #include <logger_helper.h>
 
 INITIALIZE_EASYLOGGINGPP
-
+double divide(double a, double b) {
+    if (b == 0.0) {
+        throw std::runtime_error("Division by zero");
+    }
+    return a / b;
+}
 
 int main(int argc, char** argv){
     // 创建客户端
@@ -19,9 +24,21 @@ int main(int argc, char** argv){
             "http://localhost:8081/index.html", // HTTP URL
             ""                             // Local path (optional)
     );
+    // 简单的加法函数
+    app.bind("add", [](double a, double b) -> double {
+        std::cout << "Called add(" << a << ", " << b << ")" << std::endl;
+        return a + b;
+    });
 
+    app.bind("divide", &divide);
+    // 字符串连接函数
+    app.bind("concat", [](const std::string& a, const std::string& b) -> std::string {
+        std::cout << "Called concat(\"" << a << "\", \"" << b << "\")" << std::endl;
+        return a + b;
+    });
 // Initialize the pipe server first
     if (app.initialize()) {
+
         // Then register with Electron
         app.registerApp();
 

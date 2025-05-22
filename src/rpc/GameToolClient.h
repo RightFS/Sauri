@@ -10,10 +10,11 @@
 #include <mutex>
 #include <atomic>
 #include <queue>
-#include "rpc/NamedPipeClient.h"
-#include "rpc/NamedPipeServer.h"
-#include <nlohmann/json.hpp>
-
+#include "pipe/NamedPipeClient.h"
+#include "pipe/NamedPipeServer.h"
+#include "nlohmann/json.hpp"
+#include "../model/model.h"
+#include "detail/call_impl.h"
 using json = nlohmann::json;
 
 class GameToolApplication {
@@ -53,11 +54,22 @@ public:
 
     void exec();
 
+    // 绑定 RPC 方法 - Lambda 版本
+    template<typename Func>
+    void bind(const std::string& method_name, Func&& func) {
+        function_map_[method_name] = [f = std::forward<Func>(func)](const std::vector<json>& params) -> json {
+            return rpc::detail::call_with_json_params(f, params);
+        };
+    }
+
 private:
     // 连接到Dock主管道
     bool connectToDock();
 
-    bool handleHandshake(const json& message);
+    // 处理接收到的 RPC 请求
+    void handleRpcRequest(const BaseRpcMessage &message);
+    bool handleHandshake(const HandshakeMessage& message);
+
 
     // App information stored as member variables
     std::string appId_;
@@ -70,17 +82,10 @@ private:
     std::string localPath_;
     MessageCallback messageHandler_;
 
-    // 主管道连接
-    HANDLE mainPipeHandle_;
-
     // 应用管道服务器
-    HANDLE serverPipeHandle_;
     std::thread serverThread_;
     std::atomic<bool> running_;
 
-    // 连接的客户端
-    std::mutex clientsMutex_;
-    std::vector<HANDLE> clients_;
 
     // 主管道读取线程
     std::thread clientThread_;
@@ -89,4 +94,6 @@ private:
     std::shared_ptr<NamedPipeServer> server_;
     asio::io_context io_context_client_;
     asio::io_context io_context_server_;
+
+    std::unordered_map <std::string, std::function<json(const json &)>> function_map_;
 };

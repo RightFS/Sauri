@@ -4,9 +4,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(boost_asio REQUIRED CONFIG)
-
+find_package(stduuid CONFIG REQUIRED)
 aux_source_directory(. SOURCE_FILES)
 aux_source_directory(rpc SOURCE_FILES)
+aux_source_directory(rpc/pipe SOURCE_FILES)
 
 # 定义输出目标
 add_executable(${PROJECT_NAME}
@@ -14,9 +15,10 @@ add_executable(${PROJECT_NAME}
 )
 
 # 可能需要链接额外的库
-target_link_libraries(${PROJECT_NAME} PRIVATE
+target_link_libraries(${PROJECT_NAME} PUBLIC
         Boost::asio
         common
+        stduuid
 )
 target_compile_definitions(${PROJECT_NAME} PRIVATE -D_WIN32_WINNT=0x0601)
 if (MSVC)

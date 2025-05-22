@@ -1,8 +1,8 @@
-#include <boost/asio.hpp>
+#include "boost/asio.hpp"
 #include <iostream>
 #include <string>
 #include <memory>
-#include <windows.h>
+#include <Windows.h>
 #include <deque>
 
 namespace asio = boost::asio;
@@ -18,7 +18,7 @@ public:
     bool connect();
 
     // 发送消息
-    void send(const std::string& message);
+    void write(const std::string& message);
 
     // 设置消息处理回调
     void set_message_handler(MessageHandler handler);

@@ -76,7 +76,7 @@ bool NamedPipeClient::connect() {
     return true;
 }
 
-void NamedPipeClient::send(const std::string &message) {
+void NamedPipeClient::write(const std::string &message) {
     if (!connected_ || !pipe_) return;
 
     auto self = shared_from_this();

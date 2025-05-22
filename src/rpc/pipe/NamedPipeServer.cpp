@@ -217,7 +217,7 @@ void NamedPipeServer::start_read() {
                                        [this](const error_code &ec, std::size_t bytes_transferred) {
                                            if (!ec) {
                                                if (bytes_transferred > 0) {
-                                                   // Process received data
+                                                   // Process received payload
                                                    std::string received_data(buffer_.begin(),
                                                                              buffer_.begin() + bytes_transferred);
 
