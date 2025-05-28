@@ -35,5 +35,14 @@
   }, {
     "name" : "boost-asio",
     "version>=" : "1.87.0#1"
+  }, {
+    "name" : "stduuid",
+    "version>=" : "1.2.3"
+  }, {
+    "name" : "cmakerc",
+    "version>=" : "2023-07-24"
+  }, {
+    "name" : "cli11",
+    "version>=" : "2.5.0"
   } ]
 }

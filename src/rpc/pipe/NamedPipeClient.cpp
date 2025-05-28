@@ -19,7 +19,7 @@ bool NamedPipeClient::connect() {
     if (connected_) return true;
 
     std::string pipe_name = "\\\\.\\pipe\\" + server_name_;
-
+    LOG(INFO) << "[D]"<< "connect to: " << pipe_name;
     // 尝试连接到命名管道
     HANDLE pipe_handle = CreateFileA(
             pipe_name.c_str(),

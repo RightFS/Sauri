@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#define WIN32_LEAN_AND_MEAN
 
 #include <string>
 #include <functional>
@@ -32,8 +33,8 @@ public:
             std::string appPipeName,
             std::string httpUrl = "",
             std::string localPath = "",
-            int workerThreads = 4,
-            std::string mainPipeName = "electron_main_pipe"
+            std::string mainPipeName = "leigod_tool_main_pipe",
+            int workerThreads = 4
     );
 
     ~GameToolApplication();

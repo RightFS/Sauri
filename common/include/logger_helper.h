@@ -4,6 +4,8 @@
 
 #pragma once
 
+#define WIN32_LEAN_AND_MEAN
+#define ELPP_WINSOCK2 1
 #include <easylogging++.h>
 #include <filesystem>
 #include <vector>

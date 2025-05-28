@@ -16,8 +16,8 @@ GameToolApplication::GameToolApplication(
         std::string appPipeName,
         std::string httpUrl,
         std::string localPath,
-        int workerThreads,
-        std::string mainPipeName
+        std::string mainPipeName,
+        int workerThreads
 ) : appId_(std::move(appId)),
     name_(std::move(name)),
     description_(std::move(description)),
@@ -29,7 +29,9 @@ GameToolApplication::GameToolApplication(
     worker_threads_(workerThreads),
     running_(false) {
     InitializeLogger(7, "logs");
-
+//    if (mainPipeName_.empty()) {
+//        mainPipeName_ = appId_ + "_main_pipe";
+//    }
     client_ = std::make_shared<NamedPipeClient>(io_context_client_, mainPipeName_);
     server_ = std::make_shared<NamedPipeServer>(io_context_server_, appPipeName_);
     client_->set_message_handler([this](const std::string &message) {
@@ -261,6 +263,7 @@ void GameToolApplication::exec() {
         LOG(INFO) << "[D] " << "serverThread_ join";
     }
 }
+
 void GameToolApplication::handleRpcRequest(const BaseRpcMessage &msg) {
     // Make a copy of the message for the task
     BaseRpcMessage msgCopy = msg;
@@ -304,6 +307,7 @@ void GameToolApplication::handleRpcRequest(const BaseRpcMessage &msg) {
     // Notify one worker thread that a new task is available
     task_cv_.notify_one();
 }
+
 /*
 void GameToolApplication::handleRpcRequest(const BaseRpcMessage &msg) {
     RpcResponse response;

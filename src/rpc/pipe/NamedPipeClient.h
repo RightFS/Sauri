@@ -1,9 +1,10 @@
-#include "boost/asio.hpp"
+#pragma once
+
 #include <iostream>
 #include <string>
 #include <memory>
-#include <Windows.h>
 #include <deque>
+#include <boost/asio.hpp>
 
 namespace asio = boost::asio;
 
