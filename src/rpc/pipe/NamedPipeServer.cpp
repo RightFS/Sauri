@@ -1,4 +1,4 @@
-#include "NamedPipeServer.h"
+#include "../../../include/sauri/rpc/pipe/named_pipe_server.h"
 
 NamedPipeServer::NamedPipeServer(boost::asio::io_context &io_context, const std::string &pipe_name)
         : io_context_(io_context),

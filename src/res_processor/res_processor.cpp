@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include "res_processor.h"
+#include <sauri/res_processor/res_processor.h>
 
 
 

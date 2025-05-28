@@ -12,20 +12,20 @@
 #include <atomic>
 #include <queue>
 #include <unordered_set>
-#include "pipe/NamedPipeClient.h"
-#include "pipe/NamedPipeServer.h"
+#include "pipe/named_pipe_client.h"
+#include "pipe/named_pipe_server.h"
 #include "nlohmann/json.hpp"
-#include "../model/model.h"
+#include "model.h"
 #include "detail/call_impl.h"
 
 using json = nlohmann::json;
 
-class GameToolApplication {
+class SauriApplication {
 public:
     using MessageCallback = std::function<void(const json &, json &)>;
 
     // Constructor with app information
-    GameToolApplication(
+    SauriApplication(
             std::string appId,
             std::string name,
             std::string description,
@@ -37,7 +37,7 @@ public:
             int workerThreads = 4
     );
 
-    ~GameToolApplication();
+    ~SauriApplication();
 
     // Initialize local pipe server
     bool initialize();

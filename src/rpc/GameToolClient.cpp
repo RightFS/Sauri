@@ -2,13 +2,13 @@
 // Created by Right on 25/5/14 星期三 16:51.
 //
 
-#include "GameToolClient.h"
+#include <sauri/rpc/sauri_app.h>
 #include <iostream>
 #include <utility>
 #include "logger_helper.h"
 
-// GameToolApplication.cpp modifications
-GameToolApplication::GameToolApplication(
+// SauriApplication.cpp modifications
+SauriApplication::SauriApplication(
         std::string appId,
         std::string name,
         std::string description,
@@ -89,7 +89,7 @@ GameToolApplication::GameToolApplication(
     });
 }
 
-GameToolApplication::~GameToolApplication() {
+SauriApplication::~SauriApplication() {
     stopWorkerThreads();
     // 注销应用
     unregisterApp();
@@ -110,14 +110,14 @@ GameToolApplication::~GameToolApplication() {
     }
 }
 
-bool GameToolApplication::initialize() {
+bool SauriApplication::initialize() {
     // Start the pipe server first
     LOG(INFO) << "[D] " << "initialize";
     startWorkerThreads();
     return startPipeServer();
 }
 
-bool GameToolApplication::registerSelf() {
+bool SauriApplication::registerSelf() {
     // Connect to Electron
     if (!connectToDock()) {
         return false;
@@ -157,7 +157,7 @@ bool GameToolApplication::registerSelf() {
     return true;
 }
 
-bool GameToolApplication::connectToDock() {
+bool SauriApplication::connectToDock() {
     try {
         if (!client_->connect()) {
             LOG(INFO) << "[E] " << "Error connecting to dock";
@@ -177,7 +177,7 @@ bool GameToolApplication::connectToDock() {
     return false;
 }
 
-bool GameToolApplication::handleHandshake(const HandshakeMessage &message) {
+bool SauriApplication::handleHandshake(const HandshakeMessage &message) {
     if (message.step == 1) {
         auto step2 = CreateHandshakeMessage(appId_, {
                 {"step", 2}
@@ -191,7 +191,7 @@ bool GameToolApplication::handleHandshake(const HandshakeMessage &message) {
     return false;
 }
 
-bool GameToolApplication::unregisterApp() {
+bool SauriApplication::unregisterApp() {
     if (!server_->is_connected()) {
         return false;
     }
@@ -207,7 +207,7 @@ bool GameToolApplication::unregisterApp() {
     return true;
 }
 
-bool GameToolApplication::startPipeServer() {
+bool SauriApplication::startPipeServer() {
     if (running_ || appPipeName_.empty()) {
         return false;
     }
@@ -232,7 +232,7 @@ bool GameToolApplication::startPipeServer() {
     return true;
 }
 
-bool GameToolApplication::sendMessage(const BaseRpcMessage &message) {
+bool SauriApplication::sendMessage(const BaseRpcMessage &message) {
     if (server_->is_connected()) {
         std::string msg = json(message).dump() + "\n";
         LOG(INFO) << "[D] " << "server send: " << msg;
@@ -242,7 +242,7 @@ bool GameToolApplication::sendMessage(const BaseRpcMessage &message) {
     return false;
 }
 
-bool GameToolApplication::sendMessage(const json &message) {
+bool SauriApplication::sendMessage(const json &message) {
     if (server_->is_connected()) {
         std::string msg = message.dump() + "\n";
         LOG(INFO) << "[D] " << "server send: " << msg;
@@ -252,7 +252,7 @@ bool GameToolApplication::sendMessage(const json &message) {
     return false;
 }
 
-void GameToolApplication::exec() {
+void SauriApplication::exec() {
     // 等待IO线程结束
     if (clientThread_.joinable()) {
         clientThread_.join();
@@ -264,7 +264,7 @@ void GameToolApplication::exec() {
     }
 }
 
-void GameToolApplication::handleRpcRequest(const BaseRpcMessage &msg) {
+void SauriApplication::handleRpcRequest(const BaseRpcMessage &msg) {
     // Make a copy of the message for the task
     BaseRpcMessage msgCopy = msg;
 
@@ -309,7 +309,7 @@ void GameToolApplication::handleRpcRequest(const BaseRpcMessage &msg) {
 }
 
 /*
-void GameToolApplication::handleRpcRequest(const BaseRpcMessage &msg) {
+void SauriApplication::handleRpcRequest(const BaseRpcMessage &msg) {
     RpcResponse response;
     try {
         auto request = msg.payload.get<RpcRequest>();
@@ -348,7 +348,7 @@ void GameToolApplication::handleRpcRequest(const BaseRpcMessage &msg) {
     sendMessage(responseMessage);
 }
 */
-void GameToolApplication::emitEvent(const std::string &event_name, const json &data) {
+void SauriApplication::emitEvent(const std::string &event_name, const json &data) {
     if (!event_list_.contains(event_name)) {
         LOG(INFO) << "[E] " << "Event not declared: " << event_name;
         return;
@@ -364,17 +364,17 @@ void GameToolApplication::emitEvent(const std::string &event_name, const json &d
     }
 }
 
-void GameToolApplication::declareEvent(const std::string &event_name) {
+void SauriApplication::declareEvent(const std::string &event_name) {
     event_list_.emplace(event_name);
 }
 
-void GameToolApplication::declareEvents(const std::vector<std::string> &event_names) {
+void SauriApplication::declareEvents(const std::vector<std::string> &event_names) {
     for (const auto &event_name: event_names) {
         declareEvent(event_name);
     }
 }
 
-void GameToolApplication::startWorkerThreads() {
+void SauriApplication::startWorkerThreads() {
     for (size_t i = 0; i < num_workers_; ++i) {
         worker_threads_.emplace_back([this] {
             while (true) {
@@ -396,7 +396,7 @@ void GameToolApplication::startWorkerThreads() {
     }
 }
 
-void GameToolApplication::stopWorkerThreads() {
+void SauriApplication::stopWorkerThreads() {
     {
         std::lock_guard<std::mutex> lock(task_mutex_);
         shutdown_ = true;

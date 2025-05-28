@@ -4,6 +4,15 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+
+find_package(CLI11 CONFIG REQUIRED)
+find_package(CMakeRC CONFIG REQUIRED)
+cmrc_add_resource_library(resources-asar
+        ALIAS res::asar
+        NAMESPACE res::asar
+        cmrc.test
+)
+
 aux_source_directory(. SOURCE_FILES)
 # 定义输出目标
 add_executable(${PROJECT_NAME}
@@ -12,8 +21,9 @@ add_executable(${PROJECT_NAME}
 
 # 可能需要链接额外的库
 target_link_libraries(${PROJECT_NAME} PRIVATE
-        game_tool_base
-        common
+        sauri
+        res::asar
+        CLI11::CLI11
 )
 
 if (MSVC)
