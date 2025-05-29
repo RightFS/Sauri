@@ -13,11 +13,10 @@
 #include "boost/bind/bind.hpp"
 
 using boost::asio::windows::stream_handle;
-using boost::system::error_code;
 
 // Define callback function types
 using message_handler = std::function<void(const std::string &)>;
-using error_handler = std::function<void(const error_code &)>;
+using error_handler = std::function<void(const boost::system::error_code &)>;
 using connect_handler = std::function<void()>;
 using disconnect_handler = std::function<void()>;
 
@@ -60,7 +59,7 @@ private:
 
     void do_write();
 
-    void handle_error(const error_code &ec);
+    void handle_error(const boost::system::error_code &ec);
 
     void start_client_check_timer();
 

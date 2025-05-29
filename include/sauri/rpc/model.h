@@ -7,9 +7,10 @@
 #define UUID_SYSTEM_GENERATOR 1
 
 #include <unordered_set>
-#include "nlohmann/json.hpp"
+#include <cstddef>
+#include <nlohmann/json.hpp>
 #include <utility>
-#include "stduuid/uuid.h"
+#include <stduuid/uuid.h>
 #include "sauri/utils/utils.h"
 
 using json = nlohmann::json;

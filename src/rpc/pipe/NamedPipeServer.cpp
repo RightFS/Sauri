@@ -14,7 +14,7 @@ NamedPipeServer::NamedPipeServer(boost::asio::io_context &io_context, const std:
         std::cout << "Received: " << message << std::endl;
     };
 
-    on_error_ = [](const error_code &ec) {
+    on_error_ = [](const boost::system::error_code &ec) {
         std::cerr << "Error: " << ec.message() << std::endl;
     };
 
@@ -148,7 +148,7 @@ void NamedPipeServer::wait_for_connection() {
         // Capture the overlapped pointer for proper cleanup
         event_handle->async_wait(
                 boost::asio::bind_executor(strand_,
-                                           [this, event_handle, overlapped](const error_code &ec) {
+                                           [this, event_handle, overlapped](const boost::system::error_code &ec) {
                                                // Clean up the event and overlapped structure
                                                CloseHandle(overlapped->hEvent);
                                                delete overlapped;
@@ -194,7 +194,7 @@ void NamedPipeServer::wait_for_connection() {
 
 void NamedPipeServer::close_pipe() {
     if (pipe_.is_open()) {
-        error_code ec;
+        boost::system::error_code ec;
         pipe_.close(ec);
     }
 
@@ -214,7 +214,7 @@ void NamedPipeServer::start_read() {
     pipe_.async_read_some(
             boost::asio::buffer(buffer_),
             boost::asio::bind_executor(strand_,
-                                       [this](const error_code &ec, std::size_t bytes_transferred) {
+                                       [this](const boost::system::error_code &ec, std::size_t bytes_transferred) {
                                            if (!ec) {
                                                if (bytes_transferred > 0) {
                                                    // Process received payload
@@ -244,7 +244,7 @@ void NamedPipeServer::do_write() {
             pipe_,
             boost::asio::buffer(write_queue_.front()),
             boost::asio::bind_executor(strand_,
-                                       [this](const error_code &ec, std::size_t /*bytes_transferred*/) {
+                                       [this](const boost::system::error_code &ec, std::size_t /*bytes_transferred*/) {
                                            if (!ec) {
                                                write_queue_.pop_front();
 
@@ -259,7 +259,7 @@ void NamedPipeServer::do_write() {
     );
 }
 
-void NamedPipeServer::handle_error(const error_code &ec) {
+void NamedPipeServer::handle_error(const boost::system::error_code &ec) {
     // Check for client disconnect
     if (ec == boost::asio::error::eof ||
         ec == boost::asio::error::connection_reset ||
@@ -290,7 +290,7 @@ void NamedPipeServer::start_client_check_timer() {
 
     // Schedule the timer
     timer_.expires_after(std::chrono::seconds(5));
-    timer_.async_wait([this](const error_code &ec) {
+    timer_.async_wait([this](const boost::system::error_code &ec) {
         if (!ec && !is_stopped_) {
             check_client_connection();
             // Reschedule the timer
