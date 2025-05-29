@@ -1,6 +1,6 @@
 {
   "name": "sauri",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "A C++ implementation that like Tauri.",
   "homepage": "https://github.com/RightFS/sauri",
   "license": "MIT",
@@ -8,6 +8,10 @@
     "boost-asio",
     "stduuid",
     "cmakerc",
+    "easyloggingpp",
+    "nlohmann-json",
+    "gtest",
+    "cli11",
     {
       "name": "vcpkg-cmake",
       "host": true
@@ -15,6 +19,9 @@
     {
       "name": "vcpkg-cmake-config",
       "host": true
+    },
+    {
+      "name": "pkgconf"
     }
   ]
 }
