@@ -34,5 +34,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 
 if (MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8 /wd4996 /wd4100 /wd5054 /wd4020 /wd4018 /wd4200 /wd4459 /wd4389")
-    include(${CMAKE_ROOT_PATH}/cmake/properties/msvc.cmake)
+    include(${CMAKE_SOURCE_DIR}/cmake/properties/msvc.cmake)
 endif ()

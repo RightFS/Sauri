@@ -37,7 +37,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC -D_WIN32_WINNT=0x0601)
 if (MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE
             /utf-8 /wd4996 /wd4100 /wd5054 /wd4020 /wd4018 /wd4200 /wd4459 /wd4389)
-    include(${CMAKE_ROOT_PATH}/cmake/properties/msvc.cmake)
+    include(${CMAKE_SOURCE_DIR}/cmake/properties/msvc.cmake)
 endif ()
 
 
@@ -65,7 +65,7 @@ install(EXPORT ${PROJECT_NAME}-targets
 # Generate and install config file
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
-        ${CMAKE_ROOT_PATH}/cmake/${PROJECT_NAME}-config.cmake.in
+        ${CMAKE_SOURCE_DIR}/cmake/${PROJECT_NAME}-config.cmake.in
         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
         INSTALL_DESTINATION share/${PROJECT_NAME}
 )
