@@ -9,7 +9,6 @@ pkg_check_modules(easyloggingpp easyloggingpp REQUIRED IMPORTED_TARGET)
 
 add_library(${PROJECT_NAME}
         src/Common.cpp
-        src/logger_helper.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

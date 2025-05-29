@@ -7,6 +7,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(CLI11 CONFIG REQUIRED)
 find_package(CMakeRC CONFIG REQUIRED)
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(easyloggingpp easyloggingpp REQUIRED IMPORTED_TARGET)
+
 cmrc_add_resource_library(resources-asar
         ALIAS res::asar
         NAMESPACE res::asar
@@ -14,6 +18,7 @@ cmrc_add_resource_library(resources-asar
 )
 
 aux_source_directory(. SOURCE_FILES)
+aux_source_directory(./res_processor SOURCE_FILES)
 # 定义输出目标
 add_executable(${PROJECT_NAME}
         ${SOURCE_FILES}
@@ -24,9 +29,10 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         sauri
         res::asar
         CLI11::CLI11
+        PkgConfig::easyloggingpp
 )
 
 if (MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8 /wd4996 /wd4100 /wd5054 /wd4020 /wd4018 /wd4200 /wd4459 /wd4389")
-    include(${NNGAME_ROOT_PATH}/cmake/properties/msvc.cmake)
+    include(${CMAKE_ROOT_PATH}/cmake/properties/msvc.cmake)
 endif ()

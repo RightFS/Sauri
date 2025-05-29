@@ -6,5 +6,5 @@
 #ifndef GAME_TOOL_BASE_SAURI_H
 #define GAME_TOOL_BASE_SAURI_H
 #include "rpc/sauri_app.h"
-#include "res_processor/res_processor.h"
+#include "logger_helper/logger_helper.h"
 #endif //GAME_TOOL_BASE_SAURI_H

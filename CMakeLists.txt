@@ -32,7 +32,7 @@ if (MSVC)
 endif ()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 # set path to the cmake folder
-set(NNGAME_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR} CACHE STRING "")
+set(CMAKE_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR} CACHE STRING "")
 add_subdirectory(common)
 #add_subdirectory(gametools-base)
 #add_subdirectory(gametools-node)

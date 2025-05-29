@@ -10,7 +10,7 @@
 #include "nlohmann/json.hpp"
 #include <utility>
 #include "stduuid/uuid.h"
-#include "nn_utils.h"
+#include "sauri/utils/utils.h"
 
 using json = nlohmann::json;
 

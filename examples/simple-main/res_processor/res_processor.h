@@ -1,16 +1,16 @@
 //
-// Created by Right on 25/5/27 星期二 11:34.
+// Created by Right on 25/5/27 星期二 11:35.
 //
+
+#pragma once
+#ifndef GAME_TOOL_BASE_RES_PROCESSOR_H
+#define GAME_TOOL_BASE_RES_PROCESSOR_H
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <sauri/res_processor/res_processor.h>
-
-
-
-// 递归释放资源目录
-bool extractResourcesRecursive(const cmrc::embedded_filesystem &fs, const std::string &extractPath,
-                               const std::string &resourceDir) {
+#include "cmrc/cmrc.hpp"
+inline bool extractResourcesRecursive(const cmrc::embedded_filesystem &fs, const std::string &extractPath,
+                               const std::string &resourceDir = ""){
     try {
 
         // 遍历当前资源目录
@@ -56,8 +56,7 @@ bool extractResourcesRecursive(const cmrc::embedded_filesystem &fs, const std::s
     }
 }
 
-// 更新extractResources函数
-bool extractResources(const cmrc::embedded_filesystem &fs, const std::string &extractPath) {
+inline bool extractResources(const cmrc::embedded_filesystem &fs, const std::string &extractPath){
     std::cout << "Extracting resources to: " << extractPath << std::endl;
 
     // 确保目标路径存在
@@ -69,3 +68,4 @@ bool extractResources(const cmrc::embedded_filesystem &fs, const std::string &ex
     }
     return false;
 }
+#endif //GAME_TOOL_BASE_RES_PROCESSOR_H

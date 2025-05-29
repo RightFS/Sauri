@@ -1,0 +1,20 @@
+{
+  "name": "sauri",
+  "version": "0.1.0",
+  "description": "A C++ implementation that like Tauri.",
+  "homepage": "https://github.com/RightFS/sauri",
+  "license": "MIT",
+  "dependencies": [
+    "boost-asio",
+    "stduuid",
+    "cmakerc",
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ]
+}

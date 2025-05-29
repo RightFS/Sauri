@@ -1,11 +1,12 @@
 //
 // Created by Right on 25/5/19 星期一 14:52.
 //
-#include "CLI/CLI.hpp"
-#include "logger_helper.h"
-#include "sauri/sauri.h"
+#include <CLI/CLI.hpp>
+#include <sauri/sauri.h>
+#include "res_processor/res_processor.h"
 
 INITIALIZE_EASYLOGGINGPP
+
 
 CMRC_DECLARE(res::asar);
 

@@ -1,10 +1,10 @@
 //
 // Created by Right on 25/5/19 星期一 17:39.
 //
-#include "../../../include/sauri/rpc/pipe/named_pipe_client.h"
+#include "sauri/rpc/pipe/named_pipe_client.h"
 
 #include <utility>
-#include "logger_helper.h"
+#include "sauri/logger_helper/logger_helper.h"
 
 
 NamedPipeClient::NamedPipeClient(asio::io_context &io_context, std::string server_name)
