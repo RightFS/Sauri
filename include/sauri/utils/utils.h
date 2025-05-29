@@ -1,5 +1,5 @@
 //
-// Created by Right on 25/5/21 星期三 17:40.
+// Created by Right on 25/5/21  17:40.
 //
 
 #pragma once
@@ -8,7 +8,6 @@
 
 #include <chrono>
 
-// 获取当前时间戳（毫秒）
 inline int64_t get_current_time_ms() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch()
