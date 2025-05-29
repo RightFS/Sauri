@@ -1,5 +1,5 @@
 //
-// Created by Right on 25/5/16 星期五 17:52.
+// Created by Right on 25/5/16 17:52.
 //
 
 #pragma once
@@ -10,8 +10,14 @@
 #include <cstddef>
 #include <nlohmann/json.hpp>
 #include <utility>
+#if !defined(__cpp_lib_byte) && !defined(STD_BYTE_DEFINED)
+namespace std {
+    enum class byte : unsigned char {};
+}
+#define STD_BYTE_DEFINED
+#endif
 #include <stduuid/uuid.h>
-#include "sauri/utils/utils.h"
+#include "../utils/utils.h"
 
 using json = nlohmann::json;
 
@@ -72,7 +78,7 @@ struct RegisterMsg {
     }
 };
 
-// RPC 请求消息结构
+// RPC request
 struct RpcRequest {
     std::string id;
     std::string method;
@@ -87,7 +93,7 @@ struct RpcResponseError {
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(RpcResponseError, code, message, data)
 };
-// RPC 响应消息结构
+// RPC response
 struct RpcResponse {
     std::string id;
     json result;
@@ -97,7 +103,7 @@ struct RpcResponse {
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(RpcResponse, id, hasError, result, error)
 };
 
-// RPC 响应消息结构
+// RPC Event
 struct RpcEvent {
     std::string id;
     std::string event;

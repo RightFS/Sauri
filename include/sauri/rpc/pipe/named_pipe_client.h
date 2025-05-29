@@ -15,32 +15,26 @@ public:
 
     NamedPipeClient(asio::io_context& io_context, std::string  server_name);
 
-    // 连接到服务器
+    // connect to the named pipe server
     bool connect();
 
-    // 发送消息
+    // send a message to the server
     void write(const std::string& message);
 
-    // 设置消息处理回调
+    // set message handler
     void set_message_handler(MessageHandler handler);
 
-    // 设置连接状态回调
     void set_connection_handler(ConnectionHandler handler);
 
-    // 关闭连接
     void close();
 
-    // 检查是否已连接
     bool is_connected() const;
 
 private:
-    // 开始异步读取
     void start_read();
 
-    // 处理读取完成
     void handle_read(const boost::system::error_code& ec, std::size_t bytes_transferred);
 
-    // 执行写入操作
     void do_write();
 
     asio::io_context& io_context_;
